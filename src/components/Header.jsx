@@ -1,7 +1,7 @@
 import { Activity } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
-export default function Header() {
+export default function Header({ children }) {
   const location = useLocation();
 
   const titleMap = {
@@ -18,9 +18,10 @@ export default function Header() {
           <Activity className="text-cyan-400" size={26} />
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {title}
-          </h1>
+          <div className="flex gap-5">
+            <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+            <div>{children}</div>
+          </div>
           <p className="text-slate-400 text-sm">
             Monitor Kualitas Udara Dalam Ruangan
           </p>
