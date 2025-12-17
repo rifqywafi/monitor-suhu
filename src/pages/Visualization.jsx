@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense, lazy } from "react";
+import { useEffect, useState, Suspense } from "react";
 import axios from "axios";
 import LoadingScreen from "../components/LoadingScreen";
 
@@ -7,9 +7,6 @@ import HistogramChart from "../charts/HistogramChart";
 import ScatterChart from "../charts/ScatterChart";
 import BarChart from "../charts/BarChart";
 
-const Header = lazy(() => import("../components/Header"));
-const Sidebar = lazy(() => import("../components/Sidebar"));
-const Footer = lazy(() => import("../components/Footer"));
 
 export default function Visualization() {
   const [chartData, setChartData] = useState([]);

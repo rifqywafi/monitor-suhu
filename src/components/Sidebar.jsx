@@ -4,8 +4,11 @@ export default function Sidebar() {
   const base = "block px-4 py-2 rounded-lg transition";
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-white/10 p-4">
-      <h1 className="text-xl font-bold mb-6">IoT Monitor</h1>
+    <aside className="w-64 bg-slate-900 border-r border-white/10 p-5">
+      <h1 className="text-xl font-bold mb-1">Aeromon</h1>
+      <h1 className="text-md text-gray-500 mb-6">
+        Monitoring Suhu dan Kelembaban Ruangan
+      </h1>
 
       <nav className="space-y-2">
         <NavLink
