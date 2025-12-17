@@ -1,4 +1,5 @@
 import { useEffect, useState, Suspense } from "react";
+import { io } from "socket.io-client";
 import axios from "axios";
 import LoadingScreen from "../components/LoadingScreen";
 
@@ -7,14 +8,14 @@ import HistogramChart from "../charts/HistogramChart";
 import ScatterChart from "../charts/ScatterChart";
 import BarChart from "../charts/BarChart";
 
-
 export default function Visualization() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const api = axios.create({
-      baseURL: "https://chery-coetaneous-unintegrally.ngrok-free.dev",
+      // baseURL: "https://chery-coetaneous-unintegrally.ngrok-free.dev",
+      baseURL: "http://localhost:5000",
       headers: { "ngrok-skip-browser-warning": "true" },
     });
 
@@ -30,6 +31,15 @@ export default function Visualization() {
     }
 
     fetchData();
+
+    // --- Socket.IO realtime connection ---
+    const socket = io("http://localhost:5000");
+    socket.on("sensorUpdate", (newData) => {
+      console.log("Realtime chart data:", newData);
+      setChartData((prev) => [...prev, newData]); // tambahkan data baru ke chart
+    });
+
+    return () => socket.disconnect();
   }, []);
 
   if (loading) return <LoadingScreen />;
@@ -37,9 +47,7 @@ export default function Visualization() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <div className="min-h-screen flex bg-slate-950 text-slate-100">
-
         <main className="flex-1 px-6 py-8 space-y-12">
-
           <h1 className="text-2xl font-bold">
             Visualisasi Data Sensor Lingkungan
           </h1>
@@ -48,7 +56,6 @@ export default function Visualization() {
           <HistogramChart data={chartData} />
           <ScatterChart data={chartData} />
           <BarChart data={chartData} />
-
         </main>
       </div>
     </Suspense>
