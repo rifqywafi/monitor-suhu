@@ -11,7 +11,7 @@ export default function MainLayout() {
         <Sidebar />
       </aside>
 
-      <main className="ml-64 flex-1 h-screen overflow-y-auto px-6 py-8 space-y-10">
+      <main className="ml-64 flex-1 h-screen overflow-y-auto px-6 py-8">
         <Header />
         <Outlet />
         <Footer />
