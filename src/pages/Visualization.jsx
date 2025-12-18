@@ -11,38 +11,67 @@ import BarChart from "../charts/BarChart";
 export default function Visualization() {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [serverDown, setServerDown] = useState(false);
 
   useEffect(() => {
-    const api = axios.create({
-      // baseURL: "https://chery-coetaneous-unintegrally.ngrok-free.dev",
-      baseURL: "http://localhost:5000",
-      headers: { "ngrok-skip-browser-warning": "true" },
-    });
+    const LOCAL_URL = "http://localhost:5000";
+    const NGROK_URL = "https://chery-coetaneous-unintegrally.ngrok-free.dev";
 
-    async function fetchData() {
-      try {
-        const res = await api.get("/api/sensor/visualization");
-        setChartData(res.data || []);
-      } catch (err) {
-        console.error("Visualization fetch error:", err);
-      } finally {
-        setLoading(false);
+    async function fetchData(baseURLs = [LOCAL_URL, NGROK_URL]) {
+      for (let url of baseURLs) {
+        try {
+          const instance = axios.create({
+            baseURL: url,
+            headers: { "ngrok-skip-browser-warning": "true" },
+          });
+
+          const res = await instance.get("/api/sensor/visualization");
+          setChartData(res.data || []);
+          setServerDown(false);
+
+          // Setup socket untuk server yang berhasil
+          setupSocket(url);
+          return;
+        } catch (err) {
+          console.warn(`Server at ${url} unreachable, trying next fallback..., error:`, err.message);
+        }
       }
+
+      // Jika semua gagal
+      setServerDown(true);
+      setChartData([]);
     }
 
-    fetchData();
+    function setupSocket(baseURL) {
+      const socket = io(baseURL);
+      socket.on("connect", () => console.log("Connected to socket:", socket.id));
 
-    // --- Socket.IO realtime connection ---
-    const socket = io("http://localhost:5000");
-    socket.on("sensorUpdate", (newData) => {
-      console.log("Realtime chart data:", newData);
-      setChartData((prev) => [...prev, newData]); // tambahkan data baru ke chart
-    });
+      socket.on("sensorUpdate", (newData) => {
+        console.log("Realtime chart data:", newData);
+        setChartData((prev) => [...prev, newData]);
+      });
 
-    return () => socket.disconnect();
+      return () => socket.disconnect();
+    }
+
+    fetchData().finally(() => setLoading(false));
+
+    // Cleanup socket saat component unmount
+    return () => io().disconnect();
   }, []);
 
   if (loading) return <LoadingScreen />;
+
+  if (serverDown) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+        <div className="bg-red-700 p-6 rounded-lg shadow-lg text-center space-y-4">
+          <h1 className="text-2xl font-bold">⚠️ Server Down</h1>
+          <p>Tidak dapat terhubung ke server lokal maupun server fallback.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Suspense fallback={<LoadingScreen />}>
