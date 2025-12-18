@@ -1,14 +1,16 @@
 import { Thermometer, Droplets, AlertTriangle } from "lucide-react";
 
+const getRiskIndonesian = (risk) => {
+  const translations = {
+    HIGH: "Tinggi",
+    MEDIUM: "Sedang",
+    LOW: "Rendah",
+  };
+  return translations[risk] ?? "-";
+};
+
 export default function KpiSection({ latest, risk }) {
-  let riskLabel = "";
-  if(risk === "HIGH"){
-    riskLabel = "Tinggi";
-  }else if(risk === "MEDIUM"){  
-    riskLabel = "Tinggi";
-  }else if(risk === "LOW"){
-    riskLabel = "Rendah";
-  }
+  
   return (
     <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card
@@ -27,12 +29,12 @@ export default function KpiSection({ latest, risk }) {
       />
       <Card
         title="Risiko SBS (Sick Building Syndrome)"
-        value={riskLabel?.riskLabel ?? "-"}
+        value={getRiskIndonesian(risk?.risk) ?? "-"}
         icon={<AlertTriangle />}
         color={
-          riskLabel?.riskLabel === "Tinggi"
+          risk?.risk === "HIGH"
             ? "red"
-            : riskLabel?.riskLabel === "Sedang"
+            : risk?.risk === "MEDIUM"
             ? "yellow"
             : "green"
         }
