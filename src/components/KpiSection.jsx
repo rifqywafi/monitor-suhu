@@ -22,9 +22,9 @@ export default function KpiSection({ latest, risk }) {
         value={risk?.risk ?? "-"}
         icon={<AlertTriangle />}
         color={
-          risk?.risk === "HIGH"
+          risk?.risk === "Tinggi"
             ? "red"
-            : risk?.risk === "MEDIUM"
+            : risk?.risk === "Sedang"
             ? "yellow"
             : "green"
         }
