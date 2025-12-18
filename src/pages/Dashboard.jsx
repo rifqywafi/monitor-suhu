@@ -7,7 +7,7 @@ const KpiSection = lazy(() => import("../components/KpiSection"));
 const StorySection = lazy(() => import("../components/StorySection"));
 
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
+  const [latest, setLatest] = useState(null);
   const [risk, setRisk] = useState(null);
   const [serverDown, setServerDown] = useState(false);
 
@@ -23,16 +23,15 @@ export default function Dashboard() {
             headers: { "ngrok-skip-browser-warning": "true" },
           });
 
-          const [statRes, riskRes] = await Promise.all([
-            instance.get("/api/sensor/stats"),
+          const [latestRes, riskRes] = await Promise.all([
+            instance.get("/api/sensor/latest"),
             instance.get("/api/sensor/sbs-risk"),
           ]);
 
-          setStats(statRes.data || null);
+          setLatest(latestRes.data || null);
           setRisk(riskRes.data || null);
           setServerDown(false);
 
-          // Setup socket only untuk server yang berhasil
           setupSocket(url);
           return;
         } catch (err) {
@@ -40,9 +39,9 @@ export default function Dashboard() {
         }
       }
 
-      // Jika semua gagal
+      // Semua server gagal
       setServerDown(true);
-      setStats(null);
+      setLatest(null);
       setRisk(null);
     }
 
@@ -51,13 +50,8 @@ export default function Dashboard() {
       socket.on("connect", () => console.log("Connected to socket:", socket.id));
 
       socket.on("sensorUpdate", (data) => {
-        console.log("Realtime data:", data);
-        setRisk((prev) => ({
-          ...prev,
-          temperature: data.temperature,
-          humidity: data.humidity,
-        }));
-        setStats((prev) => (prev ? { ...prev } : prev));
+        console.log("Realtime latest data:", data);
+        setLatest(data); // update data terbaru suhu & kelembaban
       });
 
       return () => socket.disconnect();
@@ -65,7 +59,6 @@ export default function Dashboard() {
 
     fetchData();
 
-    // Cleanup socket saat component unmount
     return () => io().disconnect();
   }, []);
 
@@ -84,8 +77,8 @@ export default function Dashboard() {
     <Suspense fallback={<LoadingScreen />}>
       <div className="min-h-screen flex bg-slate-950 text-slate-100">
         <main className="flex-1 px-6 py-8 space-y-10">
-          <KpiSection stats={stats} risk={risk} />
-          <StorySection stats={stats} risk={risk} />
+          <KpiSection latest={latest} risk={risk} />
+          <StorySection stats={latest} risk={risk} />
         </main>
       </div>
     </Suspense>

@@ -20,8 +20,8 @@ export default function StorySection({ stats, risk }) {
     );
   }
 
-  const tempAvg = stats.temperature?.avg ?? 0;
-  const humAvg = stats.humidity?.avg ?? 0;
+  const tempAvg = stats.temperature ?? 0;
+  const humAvg = stats.humidity ?? 0;
 
   const riskLevel = risk.risk;
 

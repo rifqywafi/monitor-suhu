@@ -9,14 +9,15 @@ import ScatterChart from "../charts/ScatterChart";
 import BarChart from "../charts/BarChart";
 
 export default function Visualization() {
-  const [chartData, setChartData] = useState([]);
+  const [stats, setStats] = useState(null);       // Statistik suhu & kelembaban
+  const [chartData, setChartData] = useState([]); // Data untuk chart
   const [loading, setLoading] = useState(true);
   const [serverDown, setServerDown] = useState(false);
 
-  useEffect(() => {
-    const LOCAL_URL = "http://localhost:5000";
-    const NGROK_URL = "https://chery-coetaneous-unintegrally.ngrok-free.dev";
+  const LOCAL_URL = "http://localhost:5000";
+  const NGROK_URL = "https://chery-coetaneous-unintegrally.ngrok-free.dev";
 
+  useEffect(() => {
     async function fetchData(baseURLs = [LOCAL_URL, NGROK_URL]) {
       for (let url of baseURLs) {
         try {
@@ -25,11 +26,17 @@ export default function Visualization() {
             headers: { "ngrok-skip-browser-warning": "true" },
           });
 
-          const res = await instance.get("/api/sensor/visualization");
-          setChartData(res.data || []);
+          // Ambil stats untuk card dan visualization untuk chart
+          const [statsRes, vizRes] = await Promise.all([
+            instance.get("/api/sensor/stats"),
+            instance.get("/api/sensor/visualization"),
+          ]);
+
+          setStats(statsRes.data || []);
+          setChartData(vizRes.data || []);
           setServerDown(false);
 
-          // Setup socket untuk server yang berhasil
+          // Setup socket untuk update chart realtime
           setupSocket(url);
           return;
         } catch (err) {
@@ -37,8 +44,9 @@ export default function Visualization() {
         }
       }
 
-      // Jika semua gagal
+      // Semua server gagal
       setServerDown(true);
+      setStats(null);
       setChartData([]);
     }
 
@@ -56,7 +64,6 @@ export default function Visualization() {
 
     fetchData().finally(() => setLoading(false));
 
-    // Cleanup socket saat component unmount
     return () => io().disconnect();
   }, []);
 
@@ -77,16 +84,47 @@ export default function Visualization() {
     <Suspense fallback={<LoadingScreen />}>
       <div className="min-h-screen flex bg-slate-950 text-slate-100">
         <main className="flex-1 px-6 py-8 space-y-12">
-          <h1 className="text-2xl font-bold">
-            Visualisasi Data Sensor Lingkungan
-          </h1>
+          <h1 className="text-2xl font-bold">Visualisasi Statistik Sensor Lingkungan</h1>
 
-          <TimeSeriesChart data={chartData} />
-          <HistogramChart data={chartData} />
-          <ScatterChart data={chartData} />
-          <BarChart data={chartData} />
+          {stats && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <StatCard
+                title="Suhu (°C)"
+                avg={stats.temperature.avg}
+                min={stats.temperature.min}
+                max={stats.temperature.max}
+                color="text-red-400"
+              />
+              <StatCard
+                title="Kelembaban (%)"
+                avg={stats.humidity.avg}
+                min={stats.humidity.min}
+                max={stats.humidity.max}
+                color="text-blue-400"
+              />
+            </div>
+          )}
+
+          {/* Chart */}
+          <div className="space-y-12">
+            <TimeSeriesChart data={chartData} />
+            <HistogramChart data={chartData} />
+            <ScatterChart data={chartData} />
+            <BarChart data={chartData} />
+          </div>
         </main>
       </div>
     </Suspense>
+  );
+}
+
+function StatCard({ title, avg, min, max, color }) {
+  return (
+    <div className="rounded-xl bg-black/30 border border-white/10 p-4 space-y-2 flex flex-col">
+      <h3 className={`font-semibold ${color}`}>{title}</h3>
+      <p className="text-sm text-slate-300">Rata-rata: {avg?.toFixed(2)}</p>
+      <p className="text-sm text-slate-300">Min: {min}</p>
+      <p className="text-sm text-slate-300">Max: {max}</p>
+    </div>
   );
 }

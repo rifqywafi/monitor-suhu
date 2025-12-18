@@ -1,18 +1,18 @@
 import { Thermometer, Droplets, AlertTriangle } from "lucide-react";
 
-export default function KpiSection({ stats, risk }) {
+export default function KpiSection({ latest, risk }) {
   return (
     <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Card
         title="Temperature"
-        value={stats?.temperature?.avg?.toFixed(2) ?? "-"}
+        value={latest?.temperature?.toFixed(2) ?? "-"}
         unit="°C"
         icon={<Thermometer />}
         color="red"
       />
       <Card
         title="Humidity"
-        value={stats?.humidity?.avg?.toFixed(2) ?? "-"}
+        value={latest?.humidity?.toFixed(2) ?? "-"}
         unit="%"
         icon={<Droplets />}
         color="blue"
